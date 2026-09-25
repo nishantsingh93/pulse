@@ -31,6 +31,8 @@ def checked(response: httpx.Response) -> dict:
     if response.status_code == 429:
         retry = response.headers.get("Retry-After")
         raise ProviderError("rate_limited", int(retry) if retry and retry.isdigit() else None)
+    if response.status_code == 402:
+        raise ProviderError("provider_credits_depleted")
     if response.status_code in (401, 403):
         raise ProviderError("provider_auth_or_permission")
     if response.status_code >= 400:

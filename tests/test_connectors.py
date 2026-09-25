@@ -1,13 +1,20 @@
 from datetime import datetime, timedelta, timezone
+import pytest
 import respx
 from httpx import Response
 from pulse.config import settings
-from pulse.connectors.live import fetch
+from pulse.connectors.live import ProviderError, checked, fetch
 
 
 def window():
     end = datetime.now(timezone.utc) - timedelta(minutes=1)
     return end - timedelta(days=2), end
+
+
+def test_x_payment_required_is_not_retryable():
+    with pytest.raises(ProviderError) as error:
+        checked(Response(402, json={"detail": "credits depleted"}))
+    assert error.value.code == "provider_credits_depleted"
 
 
 @respx.mock
